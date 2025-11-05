@@ -557,6 +557,21 @@
         </div>
         <nav class="nav-menu">
             <a href="#" class="nav-item">Consulta del Torneo</a>
+            <button onclick="location.reload()" style="
+                padding: 10px 20px;
+                background: #1e5550;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                transition: all 0.3s;
+            " onmouseover="this.style.background='#2d7a6f'" onmouseout="this.style.background='#1e5550'">
+                🔄 Actualizar
+            </button>
         </nav>
     </div>
 
@@ -574,30 +589,24 @@
                 const savedRounds = localStorage.getItem('galenosRounds');
                 if (savedPlayers) setPlayers(JSON.parse(savedPlayers));
                 if (savedRounds) setRounds(JSON.parse(savedRounds));
+                
+                // Recargar datos cada 5 segundos para mantener sincronizado
+                const interval = setInterval(() => {
+                    const savedPlayers = localStorage.getItem('galenosPlayers');
+                    const savedRounds = localStorage.getItem('galenosRounds');
+                    if (savedPlayers) setPlayers(JSON.parse(savedPlayers));
+                    if (savedRounds) setRounds(JSON.parse(savedRounds));
+                }, 5000);
+                
+                return () => clearInterval(interval);
             }, []);
 
-            // Guardar jugadores
-            React.useEffect(() => {
-                localStorage.setItem('galenosPlayers', JSON.stringify(players));
-            }, [players]);
-
-            // Guardar rondas
-            React.useEffect(() => {
-                localStorage.setItem('galenosRounds', JSON.stringify(rounds));
-            }, [rounds]);
-
-            const addPlayer = () => {
-                if (!playerName.trim() || !playerHandicap) {
-                    alert('Por favor completa todos los campos');
-                    return;
-                }
-
-                const newPlayer = {
-                    id: Date.now(),
-                    name: playerName.trim(),
-                    handicap: parseFloat(playerHandicap),
-                    isGalenos: isGalenos
-                };
+            const reloadData = () => {
+                const savedPlayers = localStorage.getItem('galenosPlayers');
+                const savedRounds = localStorage.getItem('galenosRounds');
+                if (savedPlayers) setPlayers(JSON.parse(savedPlayers));
+                if (savedRounds) setRounds(JSON.parse(savedRounds));
+            };
 
                 setPlayers([...players, newPlayer]);
                 setPlayerName('');
@@ -618,29 +627,9 @@
                 }
             };
 
-            const addRound = () => {
-                if (!roundName.trim() || !roundDate) {
-                    alert('Por favor completa el nombre y fecha de la ronda');
-                    return;
-                }
-
-                const newRound = {
-                    id: Date.now(),
-                    name: roundName.trim(),
-                    date: roundDate,
-                    scores: [],
-                    ctpHoles: []
-                };
-
                 setRounds([...rounds, newRound]);
                 setRoundName('');
                 setRoundDate('');
-            };
-
-            const deleteRound = (id) => {
-                if (confirm('¿Estás seguro de eliminar esta ronda?')) {
-                    setRounds(rounds.filter(r => r.id !== id));
-                }
             };
 
             const RoundsTab = () => (
