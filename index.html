@@ -2338,8 +2338,8 @@
                         if (data.players && data.rounds) {
                             setPlayers(data.players);
                             setRounds(data.rounds);
-                            localStorage.setItem('players', JSON.stringify(data.players));
-                            localStorage.setItem('rounds', JSON.stringify(data.rounds));
+                            localStorage.setItem('galenosPlayers', JSON.stringify(data.players));
+                            localStorage.setItem('galenosRounds', JSON.stringify(data.rounds));
                             setMessage({ type: 'success', text: '✅ Datos importados correctamente' });
                         } else {
                             setMessage({ type: 'error', text: '❌ Archivo inválido' });
@@ -2357,8 +2357,8 @@
                     if (confirm('🔴 ÚLTIMA CONFIRMACIÓN: ¿Realmente quieres borrar todo?')) {
                         setPlayers([]);
                         setRounds([]);
-                        localStorage.removeItem('players');
-                        localStorage.removeItem('rounds');
+                        localStorage.removeItem('galenosPlayers');
+                        localStorage.removeItem('galenosRounds');
                         setMessage({ type: 'success', text: '🔄 Sistema reseteado completamente' });
                         setTimeout(() => setMessage(null), 3000);
                     }
