@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galenos Golf Club - Sistema de Gestión del Torneo 2026</title>
+    <title>Galenos Golf Club - Consulta de Torneo 2026</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -556,7 +556,7 @@
             <div class="club-name">GALENOS GOLF CLUB</div>
         </div>
         <nav class="nav-menu">
-            <a href="#" class="nav-item">Sistema de Gestión</a>
+            <a href="#" class="nav-item">Consulta del Torneo</a>
         </nav>
     </div>
 
@@ -564,17 +564,9 @@
 
     <script type="text/babel">
         function App() {
-            const [activeTab, setActiveTab] = React.useState('players');
+            const [activeTab, setActiveTab] = React.useState('leaderboard');
             const [players, setPlayers] = React.useState([]);
             const [rounds, setRounds] = React.useState([]);
-            
-            const [playerName, setPlayerName] = React.useState('');
-            const [playerHandicap, setPlayerHandicap] = React.useState('');
-            const [isGalenos, setIsGalenos] = React.useState(true);
-            
-            const [roundName, setRoundName] = React.useState('');
-            const [roundDate, setRoundDate] = React.useState('');
-            const [editingRound, setEditingRound] = React.useState(null);
 
             // Cargar datos del localStorage
             React.useEffect(() => {
@@ -651,137 +643,18 @@
                 }
             };
 
-            const updateRound = (roundId, updatedRound) => {
-                setRounds(rounds.map(r => r.id === roundId ? updatedRound : r));
-            };
-
-            const PlayersTab = () => (
-                <div>
-                    <h2>👥 Gestión de Jugadores</h2>
-                    
-                    <div style={{ background: '#e8f5f3', padding: '30px', borderRadius: '15px', marginBottom: '30px' }}>
-                        <h3>Agregar Nuevo Jugador</h3>
-                        <div className="form-group">
-                            <label>Nombre del Jugador</label>
-                            <input
-                                type="text"
-                                value={playerName}
-                                onChange={(e) => setPlayerName(e.target.value)}
-                                placeholder="Ej: Juan Pérez"
-                            />
-                        </div>
-                        
-                        <div className="form-group">
-                            <label>Handicap</label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={playerHandicap}
-                                onChange={(e) => setPlayerHandicap(e.target.value)}
-                                placeholder="Ej: 18.5"
-                            />
-                        </div>
-                        
-                        <div className="form-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={isGalenos}
-                                    onChange={(e) => setIsGalenos(e.target.checked)}
-                                    style={{ marginRight: '10px', width: 'auto' }}
-                                />
-                                Miembro Galenos (puede ganar CTP)
-                            </label>
-                        </div>
-                        
-                        <button className="btn" onClick={addPlayer}>
-                            Agregar Jugador
-                        </button>
-                    </div>
-
-                    <div className="players-list">
-                        <h3>Jugadores Registrados ({players.length})</h3>
-                        {players.length === 0 ? (
-                            <div className="empty-state">
-                                <div className="empty-state-icon">⛳</div>
-                                <p>No hay jugadores registrados. Agrega tu primer jugador para comenzar.</p>
-                            </div>
-                        ) : (
-                            players.map(player => (
-                                <div key={player.id} className="player-card">
-                                    <div className="player-info">
-                                        <div className="player-name">
-                                            {player.name}
-                                            {player.isGalenos && (
-                                                <span style={{ 
-                                                    marginLeft: '10px',
-                                                    padding: '4px 10px',
-                                                    background: '#5DAFA7',
-                                                    color: 'white',
-                                                    borderRadius: '12px',
-                                                    fontSize: '12px',
-                                                    fontWeight: '700'
-                                                }}>
-                                                    GALENOS
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="player-handicap">
-                                            Handicap: {player.handicap}
-                                        </div>
-                                    </div>
-                                    <div className="player-actions">
-                                        <button 
-                                            className="btn btn-small btn-danger"
-                                            onClick={() => deletePlayer(player.id)}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            );
-
             const RoundsTab = () => (
                 <div>
-                    <h2>📅 Gestión de Rondas</h2>
-                    
-                    <div style={{ background: '#e8f5f3', padding: '30px', borderRadius: '15px', marginBottom: '30px' }}>
-                        <h3>Crear Nueva Ronda</h3>
-                        <div className="form-group">
-                            <label>Nombre de la Ronda</label>
-                            <input
-                                type="text"
-                                value={roundName}
-                                onChange={(e) => setRoundName(e.target.value)}
-                                placeholder="Ej: Ronda 1 - Temporada 2026"
-                            />
-                        </div>
-                        
-                        <div className="form-group">
-                            <label>Fecha</label>
-                            <input
-                                type="date"
-                                value={roundDate}
-                                onChange={(e) => setRoundDate(e.target.value)}
-                                min="2026-01-01"
-                            />
-                        </div>
-                        
-                        <button className="btn" onClick={addRound}>
-                            Crear Ronda
-                        </button>
-                    </div>
+                    <h2>📅 Rondas del Torneo</h2>
+                    <p style={{ color: '#666', marginBottom: '25px', fontSize: '16px' }}>
+                        Consulta todas las rondas del torneo y sus participantes
+                    </p>
 
                     <div className="rounds-list">
-                        <h3>Rondas Creadas ({rounds.length})</h3>
                         {rounds.length === 0 ? (
                             <div className="empty-state">
                                 <div className="empty-state-icon">🏌️</div>
-                                <p>No hay rondas creadas. Crea tu primera ronda para comenzar el torneo.</p>
+                                <p>No hay rondas registradas aún en el torneo.</p>
                             </div>
                         ) : (
                             rounds.map(round => (
@@ -791,29 +664,33 @@
                                             <div className="round-title">{round.name}</div>
                                             <div className="round-date">📅 {round.date}</div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            <button
-                                                className="btn btn-small"
-                                                onClick={() => {
-                                                    setEditingRound(round);
-                                                    setActiveTab('scores');
-                                                }}
-                                            >
-                                                Gestionar Scores
-                                            </button>
-                                            <button
-                                                className="btn btn-small btn-danger"
-                                                onClick={() => deleteRound(round.id)}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
                                     </div>
-                                    <div style={{ color: '#666', fontSize: '14px' }}>
+                                    <div style={{ marginTop: '15px' }}>
                                         {round.scores.length > 0 ? (
-                                            <span>✅ {round.scores.length} jugador{round.scores.length !== 1 ? 'es' : ''} con scores registrados</span>
+                                            <div>
+                                                <div style={{ color: '#1e5550', fontWeight: '700', marginBottom: '10px' }}>
+                                                    ✅ {round.scores.length} jugador{round.scores.length !== 1 ? 'es' : ''} participaron
+                                                </div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {round.scores.map(score => {
+                                                        const player = players.find(p => p.id === score.playerId);
+                                                        return player ? (
+                                                            <span key={score.playerId} style={{
+                                                                background: '#e8f5f3',
+                                                                padding: '6px 12px',
+                                                                borderRadius: '15px',
+                                                                fontSize: '14px',
+                                                                color: '#1e5550',
+                                                                fontWeight: '600'
+                                                            }}>
+                                                                {player.name}
+                                                            </span>
+                                                        ) : null;
+                                                    })}
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <span>⚠️ Sin scores registrados</span>
+                                            <div style={{ color: '#666' }}>⚠️ Sin resultados registrados</div>
                                         )}
                                     </div>
                                 </div>
@@ -822,209 +699,6 @@
                     </div>
                 </div>
             );
-
-            const ScoresTab = () => {
-                const [selectedRound, setSelectedRound] = React.useState(editingRound?.id || (rounds.length > 0 ? rounds[0].id : null));
-                const [scoreInputs, setScoreInputs] = React.useState({});
-                const [puttInputs, setPuttInputs] = React.useState({});
-                const [ctpSelections, setCtpSelections] = React.useState({});
-
-                React.useEffect(() => {
-                    if (editingRound) {
-                        setSelectedRound(editingRound.id);
-                        setEditingRound(null);
-                    }
-                }, [editingRound]);
-
-                const currentRound = rounds.find(r => r.id === selectedRound);
-
-                const saveScores = () => {
-                    if (!currentRound) return;
-
-                    const updatedScores = players.map(player => {
-                        const existingScore = currentRound.scores.find(s => s.playerId === player.id);
-                        const netScore = scoreInputs[player.id] !== undefined ? 
-                            parseFloat(scoreInputs[player.id]) : 
-                            (existingScore?.netScore || 0);
-                        const totalPutts = puttInputs[player.id] !== undefined ?
-                            parseInt(puttInputs[player.id]) :
-                            (existingScore?.totalPutts || 0);
-
-                        return {
-                            playerId: player.id,
-                            netScore: netScore,
-                            totalPutts: totalPutts
-                        };
-                    });
-
-                    const ctpHoles = Object.entries(ctpSelections)
-                        .filter(([_, playerId]) => playerId && playerId !== '')
-                        .map(([holeNumber, playerId]) => ({
-                            holeNumber: parseInt(holeNumber),
-                            playerId: parseInt(playerId)
-                        }));
-
-                    const updatedRound = {
-                        ...currentRound,
-                        scores: updatedScores,
-                        ctpHoles: ctpHoles
-                    };
-
-                    updateRound(selectedRound, updatedRound);
-                    alert('✅ Scores guardados exitosamente');
-                };
-
-                if (rounds.length === 0) {
-                    return (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">🏌️</div>
-                            <p>Primero crea una ronda en la sección "Rondas" para poder ingresar scores.</p>
-                        </div>
-                    );
-                }
-
-                if (players.length === 0) {
-                    return (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">👥</div>
-                            <p>Primero registra jugadores en la sección "Jugadores" para poder ingresar scores.</p>
-                        </div>
-                    );
-                }
-
-                return (
-                    <div>
-                        <h2>⛳ Ingreso de Scores</h2>
-                        
-                        <div className="form-group">
-                            <label>Seleccionar Ronda</label>
-                            <select
-                                value={selectedRound || ''}
-                                onChange={(e) => setSelectedRound(parseInt(e.target.value))}
-                            >
-                                {rounds.map(round => (
-                                    <option key={round.id} value={round.id}>
-                                        {round.name} - {round.date}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {currentRound && (
-                            <>
-                                <div className="scorecard-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Jugador</th>
-                                                <th>Handicap</th>
-                                                <th>Net Score</th>
-                                                <th>Total Putts</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {players.map(player => {
-                                                const existingScore = currentRound.scores.find(s => s.playerId === player.id);
-                                                return (
-                                                    <tr key={player.id}>
-                                                        <td style={{ textAlign: 'left', fontWeight: '700', color: '#1e5550' }}>
-                                                            {player.name}
-                                                            {player.isGalenos && (
-                                                                <span style={{ 
-                                                                    marginLeft: '8px',
-                                                                    fontSize: '11px',
-                                                                    color: '#5DAFA7',
-                                                                    fontWeight: '700'
-                                                                }}>
-                                                                    ⭐
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td>{player.handicap}</td>
-                                                        <td>
-                                                            <input
-                                                                type="number"
-                                                                step="1"
-                                                                defaultValue={existingScore?.netScore || ''}
-                                                                onChange={(e) => setScoreInputs({
-                                                                    ...scoreInputs,
-                                                                    [player.id]: e.target.value
-                                                                })}
-                                                                style={{ 
-                                                                    width: '100px',
-                                                                    textAlign: 'center',
-                                                                    padding: '8px'
-                                                                }}
-                                                                placeholder="0"
-                                                            />
-                                                        </td>
-                                                        <td>
-                                                            <input
-                                                                type="number"
-                                                                defaultValue={existingScore?.totalPutts || ''}
-                                                                onChange={(e) => setPuttInputs({
-                                                                    ...puttInputs,
-                                                                    [player.id]: e.target.value
-                                                                })}
-                                                                style={{ 
-                                                                    width: '100px',
-                                                                    textAlign: 'center',
-                                                                    padding: '8px'
-                                                                }}
-                                                                placeholder="0"
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div style={{ marginTop: '40px', background: '#e8f5f3', padding: '30px', borderRadius: '15px' }}>
-                                    <h3>🎯 Asignar CTP (Closest to the Pin)</h3>
-                                    <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
-                                        Solo miembros Galenos pueden ganar CTP. Selecciona el ganador de cada hoyo par 3.
-                                    </p>
-                                    
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                                        {[3, 7, 12, 16].map(holeNum => {
-                                            const existingCtp = currentRound.ctpHoles?.find(c => c.holeNumber === holeNum);
-                                            const galenosPlayers = players.filter(p => p.isGalenos);
-                                            
-                                            return (
-                                                <div key={holeNum} className="form-group">
-                                                    <label>Hoyo {holeNum}</label>
-                                                    <select
-                                                        defaultValue={existingCtp?.playerId || ''}
-                                                        onChange={(e) => setCtpSelections({
-                                                            ...ctpSelections,
-                                                            [holeNum]: e.target.value
-                                                        })}
-                                                    >
-                                                        <option value="">Sin ganador</option>
-                                                        {galenosPlayers.map(player => (
-                                                            <option key={player.id} value={player.id}>
-                                                                {player.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                                    <button className="btn" onClick={saveScores} style={{ fontSize: '18px', padding: '20px 50px' }}>
-                                        💾 Guardar Todos los Scores
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                );
-            };
 
             const LeaderboardTab = () => {
                 const calculateLeaderboard = () => {
@@ -1265,30 +939,18 @@
                     <div className="hero-section">
                         <h1 className="main-title">GALENOS</h1>
                         <h1 className="main-title" style={{ marginTop: '-10px' }}>GOLF CLUB</h1>
-                        <div className="subtitle">Sistema de Gestión del Torneo</div>
+                        <div className="subtitle">Consulta del Torneo 2026</div>
                         <div className="tournament-info">
-                            🏆 Temporada 2026 • {players.length} Jugadores • {rounds.length} Rondas
+                            🏆 Temporada 2026 • {players.length} Jugadores Registrados • {rounds.length} Rondas Jugadas
                         </div>
                     </div>
 
                     <div className="tabs">
                         <button
-                            className={`tab-button ${activeTab === 'players' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('players')}
-                        >
-                            👥 Jugadores
-                        </button>
-                        <button
                             className={`tab-button ${activeTab === 'rounds' ? 'active' : ''}`}
                             onClick={() => setActiveTab('rounds')}
                         >
                             📅 Rondas
-                        </button>
-                        <button
-                            className={`tab-button ${activeTab === 'scores' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('scores')}
-                        >
-                            ⛳ Scores
                         </button>
                         <button
                             className={`tab-button ${activeTab === 'leaderboard' ? 'active' : ''}`}
@@ -1299,9 +961,7 @@
                     </div>
 
                     <div className="content-card">
-                        {activeTab === 'players' && <PlayersTab />}
                         {activeTab === 'rounds' && <RoundsTab />}
-                        {activeTab === 'scores' && <ScoresTab />}
                         {activeTab === 'leaderboard' && <LeaderboardTab />}
                     </div>
                 </div>
