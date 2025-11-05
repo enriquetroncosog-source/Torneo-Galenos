@@ -439,7 +439,7 @@
         const { useState, useEffect } = React;
 
         function App() {
-            const [activeTab, setActiveTab] = useState('players');
+            const [activeTab, setActiveTab] = useState('leaderboard');
             const [players, setPlayers] = useState([]);
             const [rounds, setRounds] = useState([]);
             const [selectedRound, setSelectedRound] = useState(null);
@@ -527,22 +527,10 @@
                             />
                         </div>
                         <h1>Galenos Golf Club</h1>
-                        <p className="subtitle">Sistema de Gestión de Torneo Par 3</p>
+                        <p className="subtitle">Tablero del Torneo - Vista Pública</p>
                     </div>
 
                     <div className="tabs">
-                        <button 
-                            className={`tab-button ${activeTab === 'players' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('players')}
-                        >
-                            👥 Jugadores
-                        </button>
-                        <button 
-                            className={`tab-button ${activeTab === 'rounds' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('rounds')}
-                        >
-                            ⛳ Nueva Ronda
-                        </button>
                         <button 
                             className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
                             onClick={() => setActiveTab('history')}
@@ -558,28 +546,10 @@
                     </div>
 
                     <div className="content-card">
-                        {activeTab === 'players' && (
-                            <PlayersTab 
-                                players={players} 
-                                addPlayer={addPlayer}
-                                deletePlayer={deletePlayer}
-                            />
-                        )}
-                        {activeTab === 'rounds' && (
-                            <RoundsTab 
-                                players={players}
-                                addRound={addRound}
-                            />
-                        )}
                         {activeTab === 'history' && (
-                            <HistoryTab 
+                            <HistoryTabPublic 
                                 rounds={rounds}
                                 players={players}
-                                selectRound={selectRound}
-                                selectedRound={selectedRound}
-                                updateRoundScores={updateRoundScores}
-                                updateRoundInfo={updateRoundInfo}
-                                deleteRound={deleteRound}
                             />
                         )}
                         {activeTab === 'leaderboard' && (
@@ -955,6 +925,71 @@
             );
         }
 
+        function HistoryTabPublic({ rounds, players }) {
+            const [expandedRound, setExpandedRound] = useState(null);
+
+            const toggleRound = (round) => {
+                setExpandedRound(expandedRound?.id === round.id ? null : round);
+            };
+
+            return (
+                <div>
+                    <h2>📋 Historial de Rondas</h2>
+                    
+                    {rounds.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">📋</div>
+                            <p>No hay rondas registradas aún</p>
+                        </div>
+                    ) : (
+                        <div className="rounds-list">
+                            {rounds.map(round => (
+                                <div key={round.id}>
+                                    <div 
+                                        className="round-card"
+                                        onClick={() => toggleRound(round)}
+                                    >
+                                        <div className="round-header">
+                                            <div className="round-title">
+                                                {round.roundType === 'par72' ? '🏌️' : '⛳'} {round.campo}
+                                                <span style={{ 
+                                                    marginLeft: '10px', 
+                                                    padding: '4px 12px',
+                                                    background: round.roundType === 'par72' ? '#4a9a92' : '#5DAFA7',
+                                                    color: 'white',
+                                                    borderRadius: '15px',
+                                                    fontSize: '0.85em',
+                                                    fontWeight: 'normal'
+                                                }}>
+                                                    {round.roundType === 'par72' ? 'Par 72' : 'Par 3'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                <div className="round-date">📅 {round.fecha}</div>
+                                            </div>
+                                        </div>
+                                        <div className="round-players">
+                                            {round.players.map(player => (
+                                                <span key={player.id} className="round-player-tag">
+                                                    {player.name} (HCP: {player.handicap})
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    {expandedRound?.id === round.id && (
+                                        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+                                            <ReadOnlyScorecard round={round} />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         function HistoryTab({ rounds, players, selectRound, selectedRound, updateRoundScores, updateRoundInfo, deleteRound }) {
             const [expandedRound, setExpandedRound] = useState(selectedRound);
             const [editingRound, setEditingRound] = useState(null);
@@ -1323,6 +1358,461 @@
                             </div>
                         </form>
                     </div>
+                </div>
+            );
+        }
+
+        function ReadOnlyScorecard({ round }) {
+            const holes = 18;
+            const isPar72 = round.roundType === 'par72';
+            const scores = round.scores || {};
+            const putts = round.putts || {};
+            const ctpWinners = round.ctpWinners || [];
+            const courseInfo = round.courseInfo || [];
+
+            const calculateTotal = (playerId) => {
+                if (!scores[playerId]) return 0;
+                return Object.values(scores[playerId]).reduce((sum, score) => 
+                    sum + (parseInt(score) || 0), 0
+                );
+            };
+
+            const calculateTotalPutts = (playerId) => {
+                if (!putts[playerId]) return 0;
+                return Object.values(putts[playerId]).reduce((sum, putt) => 
+                    sum + (parseInt(putt) || 0), 0
+                );
+            };
+
+            const calculateStablefordPoints = (score, par, handicap, holeIndex) => {
+                if (!score || score === 0) return 0;
+                
+                const playerScore = parseInt(score);
+                const holePar = parseInt(par);
+                const playerHandicap = parseFloat(handicap);
+                
+                const strokesBase = Math.floor(playerHandicap / 18);
+                const extraStrokeMod = playerHandicap % 18;
+                const strokesReceived = strokesBase + (extraStrokeMod >= holeIndex ? 1 : 0);
+                
+                const netScore = playerScore - strokesReceived;
+                const diff = netScore - holePar;
+                
+                if (diff <= -4) return 6;
+                if (diff === -3) return 5;
+                if (diff === -2) return 4;
+                if (diff === -1) return 3;
+                if (diff === 0) return 2;
+                if (diff === 1) return 1;
+                return 0;
+            };
+
+            const calculateStablefordTotal = (playerId) => {
+                if (!scores[playerId]) return 0;
+                const player = round.players.find(p => p.id === playerId);
+                if (!player) return 0;
+                
+                const handicap = parseFloat(player.handicap) || 0;
+                let totalPoints = 0;
+                
+                courseInfo.forEach((hole, index) => {
+                    const score = scores[playerId]?.[index];
+                    if (score && score > 0) {
+                        const points = calculateStablefordPoints(score, hole.par, handicap, hole.index);
+                        totalPoints += points;
+                    }
+                });
+                
+                return totalPoints;
+            };
+
+            const getPointsByPosition = (position) => {
+                if (position === 1) return 15;
+                if (position === 2) return 12;
+                if (position === 3) return 10;
+                if (position === 4) return 8;
+                if (position === 5) return 6;
+                if (position >= 6 && position <= 10) return 3;
+                return 1;
+            };
+
+            const getPuttPointsByPosition = (position) => {
+                if (position === 1) return 3;
+                if (position === 2) return 2;
+                if (position === 3) return 1;
+                return 0;
+            };
+
+            const breakTie = (player1, player2) => {
+                const sortedHoles = [...courseInfo].sort((a, b) => 
+                    parseInt(a.index) - parseInt(b.index)
+                );
+
+                for (let holeInfo of sortedHoles) {
+                    const holeNumber = holeInfo.hole - 1;
+                    const score1 = parseInt(scores[player1.id]?.[holeNumber]) || 999;
+                    const score2 = parseInt(scores[player2.id]?.[holeNumber]) || 999;
+                    
+                    if (score1 !== score2) {
+                        return score1 - score2;
+                    }
+                }
+                
+                return 0;
+            };
+
+            const calculateResults = () => {
+                if (isPar72) {
+                    const results = round.players.map(player => {
+                        const stablefordPoints = calculateStablefordTotal(player.id);
+                        const totalBruto = calculateTotal(player.id);
+                        return {
+                            id: player.id,
+                            name: player.name,
+                            totalBruto,
+                            handicap: player.handicap,
+                            stablefordPoints
+                        };
+                    });
+
+                    results.sort((a, b) => b.stablefordPoints - a.stablefordPoints);
+
+                    return results.map((result, index) => ({
+                        ...result,
+                        position: index + 1,
+                        points: getPointsByPosition(index + 1)
+                    }));
+                } else {
+                    const results = round.players.map(player => {
+                        const totalBruto = calculateTotal(player.id);
+                        const handicap = parseFloat(player.handicap) || 0;
+                        const totalNeto = totalBruto - handicap;
+                        return {
+                            id: player.id,
+                            name: player.name,
+                            totalBruto,
+                            handicap,
+                            totalNeto
+                        };
+                    });
+
+                    results.sort((a, b) => {
+                        if (a.totalNeto === b.totalNeto) {
+                            return breakTie(a, b);
+                        }
+                        return a.totalNeto - b.totalNeto;
+                    });
+
+                    return results.map((result, index) => ({
+                        ...result,
+                        position: index + 1,
+                        points: getPointsByPosition(index + 1)
+                    }));
+                }
+            };
+
+            const calculatePuttResults = () => {
+                const results = round.players.map(player => {
+                    const totalPutts = calculateTotalPutts(player.id);
+                    return {
+                        id: player.id,
+                        name: player.name,
+                        totalPutts
+                    };
+                }).filter(r => r.totalPutts > 0);
+
+                results.sort((a, b) => a.totalPutts - b.totalPutts);
+
+                return results.map((result, index) => ({
+                    ...result,
+                    position: index + 1,
+                    points: getPuttPointsByPosition(index + 1)
+                }));
+            };
+
+            const results = calculateResults();
+            const puttResults = calculatePuttResults();
+
+            const getPlayerNameById = (playerId) => {
+                const player = round.players.find(p => p.id === parseInt(playerId));
+                return player ? player.name : '';
+            };
+
+            return (
+                <div style={{ background: 'white', padding: '20px', borderRadius: '10px', border: '2px solid #5DAFA7' }}>
+                    <h3 style={{ color: '#5DAFA7', marginBottom: '15px' }}>📊 Scores por Hoyo</h3>
+                    {isPar72 && (
+                        <div style={{ 
+                            padding: '15px', 
+                            background: '#fff9e6', 
+                            borderRadius: '8px', 
+                            marginBottom: '15px',
+                            border: '2px solid #f39c12'
+                        }}>
+                            <strong style={{ color: '#f39c12' }}>⚠️ Formato Stableford:</strong> Score y puntos Stableford por hoyo.
+                            <div style={{ marginTop: '8px', fontSize: '0.9em', color: '#666' }}>
+                                🏆 6pts: Doble Eagle (-4) | 5pts: Albatros (-3) | 4pts: Eagle (-2) | 3pts: Birdie (-1) | 2pts: Par (0) | 1pt: Bogey (+1) | 0pts: +2 o más
+                            </div>
+                        </div>
+                    )}
+                    <div className="scorecard-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowSpan="2">Jugador</th>
+                                    <th rowSpan="2">HCP</th>
+                                    {[...Array(holes)].map((_, i) => (
+                                        <th key={i}>{i + 1}</th>
+                                    ))}
+                                    <th rowSpan="2">{isPar72 ? 'Pts Stableford' : 'Total'}</th>
+                                </tr>
+                                {courseInfo.length > 0 && (
+                                    <tr>
+                                        {courseInfo.map((hole, i) => (
+                                            <th key={i} style={{ fontSize: '0.8em', background: '#e8f5f3' }}>
+                                                P:{hole.par} I:{hole.index}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                )}
+                            </thead>
+                            <tbody>
+                                {round.players.map(player => {
+                                    const handicap = parseFloat(player.handicap) || 0;
+                                    
+                                    return (
+                                        <React.Fragment key={player.id}>
+                                            <tr>
+                                                <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                    {player.name}
+                                                </td>
+                                                <td>{player.handicap}</td>
+                                                {[...Array(holes)].map((_, hole) => (
+                                                    <td key={hole} style={{ fontWeight: 'bold' }}>
+                                                        {scores[player.id]?.[hole] || '-'}
+                                                    </td>
+                                                ))}
+                                                <td className="total-cell">
+                                                    {isPar72 ? (calculateStablefordTotal(player.id) || '0') : (calculateTotal(player.id) || '-')}
+                                                </td>
+                                            </tr>
+                                            <tr style={{ background: '#fff9e6', fontSize: '0.85em' }}>
+                                                <td colSpan="2" style={{ color: '#f39c12', textAlign: 'right', paddingRight: '10px', fontWeight: '600' }}>
+                                                    Chichis:
+                                                </td>
+                                                {courseInfo.map((hole, index) => {
+                                                    const strokesBase = Math.floor(handicap / 18);
+                                                    const extraStrokeMod = handicap % 18;
+                                                    const strokesReceived = strokesBase + (extraStrokeMod >= hole.index ? 1 : 0);
+                                                    
+                                                    return (
+                                                        <td key={index} style={{ 
+                                                            fontWeight: 'bold',
+                                                            color: strokesReceived > 0 ? '#f39c12' : '#ddd'
+                                                        }}>
+                                                            {strokesReceived > 0 ? strokesReceived : '-'}
+                                                        </td>
+                                                    );
+                                                })}
+                                                <td></td>
+                                            </tr>
+                                            {isPar72 && (
+                                                <tr style={{ background: '#f0f9f8' }}>
+                                                    <td colSpan="2" style={{ fontSize: '0.85em', color: '#666', textAlign: 'right', paddingRight: '10px' }}>
+                                                        Pts Stableford:
+                                                    </td>
+                                                    {[...Array(holes)].map((_, hole) => {
+                                                        const score = scores[player.id]?.[hole];
+                                                        const holeInfo = courseInfo[hole];
+                                                        const points = score && holeInfo 
+                                                            ? calculateStablefordPoints(score, holeInfo.par, player.handicap, holeInfo.index)
+                                                            : 0;
+                                                        return (
+                                                            <td key={hole} style={{ 
+                                                                fontSize: '0.85em', 
+                                                                fontWeight: 'bold',
+                                                                color: points >= 6 ? '#9b59b6' : points >= 4 ? '#2ecc71' : points >= 2 ? '#5DAFA7' : points >= 1 ? '#f39c12' : '#95a5a6'
+                                                            }}>
+                                                                {score ? points : '-'}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td style={{ fontSize: '0.85em' }}>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {!isPar72 && (
+                        <>
+                            <h3 style={{ color: '#5DAFA7', marginTop: '30px', marginBottom: '15px' }}>⛳ Putts por Hoyo</h3>
+                            <div className="scorecard-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Jugador</th>
+                                            {[...Array(holes)].map((_, i) => (
+                                                <th key={i}>{i + 1}</th>
+                                            ))}
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {round.players.map(player => (
+                                            <tr key={player.id}>
+                                                <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                    {player.name}
+                                                </td>
+                                                {[...Array(holes)].map((_, hole) => (
+                                                    <td key={hole} style={{ fontWeight: 'bold' }}>
+                                                        {putts[player.id]?.[hole] || '-'}
+                                                    </td>
+                                                ))}
+                                                <td className="total-cell">
+                                                    {calculateTotalPutts(player.id) || '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+
+                    <div style={{ marginTop: '30px' }}>
+                        <h3 style={{ color: '#5DAFA7', marginBottom: '15px', fontSize: '1.5em' }}>
+                            🏆 Resumen de Resultados - Scores
+                        </h3>
+                        <div className="scorecard-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Posición</th>
+                                        <th>Jugador</th>
+                                        <th>Total Bruto</th>
+                                        <th>Handicap</th>
+                                        <th>{isPar72 ? 'Puntos Stableford' : 'Total Neto'}</th>
+                                        <th>Puntos Torneo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {results.map((result, index) => (
+                                        <tr key={index} style={index === 0 ? { background: '#fff9e6' } : {}}>
+                                            <td style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
+                                                {index === 0 && '🥇'}
+                                                {index === 1 && '🥈'}
+                                                {index === 2 && '🥉'}
+                                                {index > 2 && `${index + 1}°`}
+                                            </td>
+                                            <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                {result.name}
+                                            </td>
+                                            <td>{result.totalBruto || '-'}</td>
+                                            <td>{result.handicap}</td>
+                                            <td className="total-cell" style={{ fontSize: '1.1em' }}>
+                                                {isPar72 ? (result.stablefordPoints || '0') : (result.totalNeto || '-')}
+                                            </td>
+                                            <td style={{ fontWeight: 'bold', fontSize: '1.2em', color: '#5DAFA7' }}>
+                                                {result.points}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {!isPar72 && puttResults.length > 0 && (
+                        <div style={{ marginTop: '30px' }}>
+                            <h3 style={{ color: '#5DAFA7', marginBottom: '15px', fontSize: '1.5em' }}>
+                                ⛳ Resumen de Resultados - Putts
+                            </h3>
+                            <div className="scorecard-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Posición</th>
+                                            <th>Jugador</th>
+                                            <th>Total Putts</th>
+                                            <th>Puntos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {puttResults.map((result, index) => (
+                                            <tr key={index} style={index === 0 ? { background: '#fff9e6' } : {}}>
+                                                <td style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
+                                                    {index === 0 && '🥇'}
+                                                    {index === 1 && '🥈'}
+                                                    {index === 2 && '🥉'}
+                                                    {index > 2 && `${index + 1}°`}
+                                                </td>
+                                                <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                    {result.name}
+                                                </td>
+                                                <td className="total-cell" style={{ fontSize: '1.1em' }}>
+                                                    {result.totalPutts}
+                                                </td>
+                                                <td style={{ fontWeight: 'bold', fontSize: '1.2em', color: '#5DAFA7' }}>
+                                                    {result.points}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {ctpWinners.length > 0 && ctpWinners.some(ctp => ctp.playerId || ctp.guestName) && (
+                        <div style={{ marginTop: '30px' }}>
+                            <h3 style={{ color: '#5DAFA7', marginBottom: '15px', fontSize: '1.5em' }}>
+                                🎯 Ganadores de CTP
+                            </h3>
+                            <div className="scorecard-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>CTP</th>
+                                            <th>Ganador</th>
+                                            <th>Tipo</th>
+                                            <th>Puntos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {ctpWinners.map((ctp, index) => {
+                                            if (!ctp.playerId && !ctp.guestName) return null;
+                                            const winnerName = ctp.type === 'member' 
+                                                ? getPlayerNameById(ctp.playerId)
+                                                : ctp.guestName;
+                                            
+                                            return (
+                                                <tr key={index}>
+                                                    <td style={{ fontWeight: 'bold' }}>
+                                                        CTP #{index + 1}
+                                                    </td>
+                                                    <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                        {winnerName}
+                                                    </td>
+                                                    <td>
+                                                        {ctp.type === 'member' ? 'Miembro Galenos' : 'Invitado'}
+                                                    </td>
+                                                    <td style={{ fontWeight: 'bold', fontSize: '1.2em', color: '#5DAFA7' }}>
+                                                        {ctp.type === 'member' ? 3 : 0}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
