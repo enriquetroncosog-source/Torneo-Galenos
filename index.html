@@ -684,6 +684,7 @@
             const [players, setPlayers] = useState([]);
             const [rounds, setRounds] = useState([]);
             const [selectedRound, setSelectedRound] = useState(null);
+            const [expandedRound, setExpandedRound] = useState(null);
 
             useEffect(() => {
                 // Función para cargar datos
@@ -740,62 +741,243 @@
                 }
             };
 
-            const RoundsSimple = () => (
-                <div>
-                    <h2>📅 Rondas del Torneo</h2>
-                    <p style={{ color: '#666', marginBottom: '25px', fontSize: '16px' }}>
-                        Consulta todas las rondas del torneo y sus participantes
-                    </p>
+            const RoundsSimple = () => {
+                const toggleRound = (roundId) => {
+                    if (expandedRound === roundId) {
+                        setExpandedRound(null);
+                    } else {
+                        setExpandedRound(roundId);
+                    }
+                };
 
-                    {rounds.length === 0 ? (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">🏌️</div>
-                            <p>No hay rondas registradas aún en el torneo.</p>
-                        </div>
-                    ) : (
-                        <div className="rounds-list">
-                            {rounds.map(round => (
-                                <div key={round.id} className="round-card">
-                                    <div className="round-header">
-                                        <div>
-                                            <div className="round-title">{round.name}</div>
-                                            <div className="round-date">📅 {round.date}</div>
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: '15px' }}>
-                                        {round.scores && round.scores.length > 0 ? (
-                                            <div>
-                                                <div style={{ color: '#1e5550', fontWeight: '700', marginBottom: '10px' }}>
-                                                    ✅ {round.scores.length} jugador{round.scores.length !== 1 ? 'es' : ''} participaron
-                                                </div>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                    {round.scores.map(score => {
-                                                        const player = players.find(p => p.id === score.playerId);
-                                                        return player ? (
-                                                            <span key={score.playerId} style={{
-                                                                background: '#e8f5f3',
-                                                                padding: '6px 12px',
+                const calculateTotal = (playerId, round) => {
+                    if (!round.scores || !round.scores[playerId]) return 0;
+                    return Object.values(round.scores[playerId]).reduce((sum, score) => 
+                        sum + (parseInt(score) || 0), 0
+                    );
+                };
+
+                const calculateTotalPutts = (playerId, round) => {
+                    if (!round.putts || !round.putts[playerId]) return 0;
+                    return Object.values(round.putts[playerId]).reduce((sum, putt) => 
+                        sum + (parseInt(putt) || 0), 0
+                    );
+                };
+
+                const calculateStablefordPoints = (score, par, handicap, holeIndex) => {
+                    if (!score || score === 0) return 0;
+                    
+                    const playerScore = parseInt(score);
+                    const holePar = parseInt(par);
+                    const playerHandicap = parseFloat(handicap);
+                    
+                    const strokesBase = Math.floor(playerHandicap / 18);
+                    const extraStrokeMod = playerHandicap % 18;
+                    const strokesReceived = strokesBase + (extraStrokeMod >= holeIndex ? 1 : 0);
+                    
+                    const netScore = playerScore - strokesReceived;
+                    const diff = netScore - holePar;
+                    
+                    if (diff <= -4) return 6;
+                    if (diff === -3) return 5;
+                    if (diff === -2) return 4;
+                    if (diff === -1) return 3;
+                    if (diff === 0) return 2;
+                    if (diff === 1) return 1;
+                    return 0;
+                };
+
+                const calculateStablefordTotal = (playerId, round) => {
+                    if (!round.scores || !round.scores[playerId]) return 0;
+                    const player = round.players.find(p => p.id === playerId);
+                    if (!player) return 0;
+                    
+                    const handicap = parseFloat(player.handicap) || 0;
+                    const courseInfo = round.courseInfo || [];
+                    let totalPoints = 0;
+                    
+                    courseInfo.forEach((hole, index) => {
+                        const score = round.scores[playerId]?.[index];
+                        if (score && score > 0) {
+                            const points = calculateStablefordPoints(score, hole.par, handicap, hole.index);
+                            totalPoints += points;
+                        }
+                    });
+                    
+                    return totalPoints;
+                };
+
+                const getLeaderboardForRound = (round) => {
+                    if (!round.players) return [];
+                    
+                    const isPar72 = round.roundType === 'par72';
+                    
+                    return round.players
+                        .map(player => ({
+                            ...player,
+                            total: calculateTotal(player.id, round),
+                            totalPutts: calculateTotalPutts(player.id, round),
+                            stablefordPoints: isPar72 ? calculateStablefordTotal(player.id, round) : 0
+                        }))
+                        .sort((a, b) => {
+                            if (isPar72) {
+                                return b.stablefordPoints - a.stablefordPoints;
+                            } else {
+                                if (a.total === 0) return 1;
+                                if (b.total === 0) return -1;
+                                return a.total - b.total;
+                            }
+                        });
+                };
+
+                return (
+                    <div>
+                        <h2>📅 Rondas del Torneo</h2>
+                        <p style={{ color: '#666', marginBottom: '25px', fontSize: '16px' }}>
+                            Consulta todas las rondas del torneo y sus participantes
+                        </p>
+
+                        {rounds.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">🏌️</div>
+                                <p>No hay rondas registradas aún en el torneo.</p>
+                            </div>
+                        ) : (
+                            <div className="rounds-list">
+                                {rounds.map(round => {
+                                    const leaderboard = getLeaderboardForRound(round);
+                                    const isPar72 = round.roundType === 'par72';
+                                    const isExpanded = expandedRound === round.id;
+                                    
+                                    return (
+                                        <div key={round.id}>
+                                            <div 
+                                                className="round-card"
+                                                onClick={() => toggleRound(round.id)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <div className="round-header">
+                                                    <div>
+                                                        <div className="round-title">
+                                                            {isPar72 ? '🏌️' : '⛳'} {round.campo}
+                                                            <span style={{ 
+                                                                marginLeft: '10px', 
+                                                                padding: '4px 12px',
+                                                                background: isPar72 ? '#2d7a6f' : '#1e5550',
+                                                                color: 'white',
                                                                 borderRadius: '15px',
-                                                                fontSize: '14px',
-                                                                color: '#1e5550',
-                                                                fontWeight: '600'
+                                                                fontSize: '0.85em',
+                                                                fontWeight: 'normal'
                                                             }}>
-                                                                {player.name}
+                                                                {isPar72 ? 'Par 72' : 'Par 3'}
                                                             </span>
-                                                        ) : null;
-                                                    })}
+                                                        </div>
+                                                        <div className="round-date">📅 {round.fecha}</div>
+                                                    </div>
+                                                    <div style={{ fontSize: '24px', color: '#1e5550' }}>
+                                                        {isExpanded ? '▼' : '▶'}
+                                                    </div>
+                                                </div>
+                                                <div style={{ marginTop: '15px' }}>
+                                                    {round.players && round.players.length > 0 ? (
+                                                        <div>
+                                                            <div style={{ color: '#1e5550', fontWeight: '700', marginBottom: '10px' }}>
+                                                                ✅ {round.players.length} jugador{round.players.length !== 1 ? 'es' : ''} participaron
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                                {round.players.map(player => (
+                                                                    <span key={player.id} style={{
+                                                                        background: '#e8f5f3',
+                                                                        padding: '6px 12px',
+                                                                        borderRadius: '15px',
+                                                                        fontSize: '14px',
+                                                                        color: '#1e5550',
+                                                                        fontWeight: '600'
+                                                                    }}>
+                                                                        {player.name} (HCP: {player.handicap})
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ color: '#666' }}>⚠️ Sin resultados registrados</div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div style={{ color: '#666' }}>⚠️ Sin resultados registrados</div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
+
+                                            {isExpanded && (
+                                                <div style={{ 
+                                                    marginTop: '20px', 
+                                                    marginBottom: '30px',
+                                                    background: 'white',
+                                                    padding: '30px',
+                                                    borderRadius: '15px',
+                                                    boxShadow: '0 4px 15px rgba(30, 85, 80, 0.08)'
+                                                }}>
+                                                    <h3 style={{ color: '#1e5550', marginBottom: '20px' }}>
+                                                        🏆 Resultados de la Ronda
+                                                    </h3>
+
+                                                    {leaderboard.length > 0 ? (
+                                                        <div className="scorecard-table">
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Pos</th>
+                                                                        <th>Jugador</th>
+                                                                        <th>Handicap</th>
+                                                                        {isPar72 && <th>Puntos Stableford</th>}
+                                                                        <th>Total Golpes</th>
+                                                                        <th>Total Putts</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {leaderboard.map((player, index) => (
+                                                                        <tr key={player.id} style={{
+                                                                            background: index === 0 && (isPar72 ? player.stablefordPoints > 0 : player.total > 0) ? '#fff9e6' : 'white'
+                                                                        }}>
+                                                                            <td style={{ fontWeight: 'bold', fontSize: '1.1em' }}>
+                                                                                {index === 0 && '🥇 '}
+                                                                                {index === 1 && '🥈 '}
+                                                                                {index === 2 && '🥉 '}
+                                                                                {index + 1}°
+                                                                            </td>
+                                                                            <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
+                                                                                {player.name}
+                                                                            </td>
+                                                                            <td>{player.handicap}</td>
+                                                                            {isPar72 && (
+                                                                                <td style={{ 
+                                                                                    fontWeight: 'bold', 
+                                                                                    color: '#1e5550',
+                                                                                    fontSize: '1.2em'
+                                                                                }}>
+                                                                                    {player.stablefordPoints}
+                                                                                </td>
+                                                                            )}
+                                                                            <td>{player.total > 0 ? player.total : '-'}</td>
+                                                                            <td>{player.totalPutts > 0 ? player.totalPutts : '-'}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="empty-state">
+                                                            <div className="empty-state-icon">📊</div>
+                                                            <p>No hay resultados registrados para esta ronda.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
 
             return (
                 <div className="app-container">
