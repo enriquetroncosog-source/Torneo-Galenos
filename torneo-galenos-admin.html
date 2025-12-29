@@ -1061,8 +1061,8 @@
                             />
                             {selectedPlayers.length > 0 && (
                                 <p style={{ marginTop: '5px', color: '#666', fontSize: '0.9em' }}>
-                                    Miembros Galenos: {selectedPlayers.length - (parseInt(numInvitados) || 0)} | 
-                                    Invitados: {parseInt(numInvitados) || 0}
+                                    Miembros Galenos: {selectedPlayers.length} | 
+                                    Invitados (no juegan, solo pagan): {parseInt(numInvitados) || 0}
                                 </p>
                             )}
                         </div>
@@ -1427,8 +1427,8 @@
                                 />
                                 {roundPlayers.length > 0 && (
                                     <p style={{ marginTop: '5px', color: '#666', fontSize: '0.9em' }}>
-                                        Miembros Galenos: {roundPlayers.length - (parseInt(numInvitados) || 0)} | 
-                                        Invitados: {parseInt(numInvitados) || 0}
+                                        Miembros Galenos: {roundPlayers.length} | 
+                                        Invitados (no juegan, solo pagan): {parseInt(numInvitados) || 0}
                                     </p>
                                 )}
                             </div>
@@ -1692,7 +1692,7 @@
             const calculatePrizes = () => {
                 const totalPlayers = round.players.length;
                 const numInvitados = round.numInvitados || 0;
-                const numGalenos = totalPlayers - numInvitados;
+                const numGalenos = totalPlayers; // Todos los jugadores en la lista son Galenos
 
                 const galenosTotal = numGalenos * 20;
                 const invitadosTotal = numInvitados * 20;
@@ -2008,48 +2008,7 @@
                         </table>
                     </div>
 
-                    {!isPar72 && (
-                        <>
-                            <h3 style={{ color: '#1e5550', marginTop: '30px', marginBottom: '15px' }}>⛳ Putts por Hoyo</h3>
-                            <div className="scorecard-table">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Jugador</th>
-                                            {[...Array(holes)].map((_, i) => (
-                                                <th key={i}>{i + 1}</th>
-                                            ))}
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {round.players.map(player => (
-                                            <tr key={player.id}>
-                                                <td style={{ fontWeight: 'bold', textAlign: 'left' }}>
-                                                    {player.name}
-                                                </td>
-                                                {[...Array(holes)].map((_, hole) => (
-                                                    <td key={hole}>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="5"
-                                                            value={putts[player.id]?.[hole] || ''}
-                                                            onChange={(e) => handlePuttChange(player.id, hole, e.target.value)}
-                                                            placeholder="-"
-                                                        />
-                                                    </td>
-                                                ))}
-                                                <td className="total-cell">
-                                                    {calculateTotalPutts(player.id) || '-'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </>
-                    )}
+
 
                     <div style={{ marginTop: '30px', background: '#f8f9fa', padding: '20px', borderRadius: '10px' }}>
                         <h3 style={{ color: '#1e5550', marginBottom: '15px' }}>🎯 Ganadores de CTP (Closest to the Pin)</h3>
