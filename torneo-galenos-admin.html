@@ -897,7 +897,7 @@
                                 <p>No hay jugadores registrados aún</p>
                             </div>
                         ) : (
-                            players.map(player => (
+                            players.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                 <div key={player.id} className="player-card">
                                     <div className="player-info">
                                         <div className="player-name">{player.name}</div>
@@ -1142,7 +1142,7 @@
                                 defaultValue=""
                             >
                                 <option value="" disabled>Selecciona un jugador</option>
-                                {players.map(player => (
+                                {players.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                     <option key={player.id} value={player.id}>
                                         {player.name} - GHIN: {player.ghin}
                                     </option>
@@ -1155,7 +1155,7 @@
                                 <h3 style={{ marginBottom: '15px', color: '#333' }}>
                                     Jugadores Seleccionados
                                 </h3>
-                                {selectedPlayers.map(player => (
+                                {selectedPlayers.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                     <div key={player.id} className="selected-player">
                                         <div className="selected-player-header">
                                             <div>
@@ -1277,7 +1277,7 @@
                                             </div>
                                         </div>
                                         <div className="round-players">
-                                            {round.players.map(player => (
+                                            {round.players.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                                 <span key={player.id} className="round-player-tag">
                                                     {player.name} (HCP: {player.handicap})
                                                 </span>
@@ -1508,7 +1508,7 @@
                                     defaultValue=""
                                 >
                                     <option value="" disabled>Selecciona un jugador</option>
-                                    {players.map(player => (
+                                    {players.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                         <option key={player.id} value={player.id}>
                                             {player.name} - GHIN: {player.ghin}
                                         </option>
@@ -1521,7 +1521,7 @@
                                     <h3 style={{ marginBottom: '15px', color: '#333' }}>
                                         Jugadores en esta Ronda
                                     </h3>
-                                    {roundPlayers.map(player => (
+                                    {roundPlayers.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                         <div key={player.id} className="selected-player">
                                             <div className="selected-player-header">
                                                 <div>
@@ -1945,7 +1945,7 @@
                                 )}
                             </thead>
                             <tbody>
-                                {round.players.map(player => {
+                                {round.players.sort((a, b) => a.name.localeCompare(b.name)).map(player => {
                                     const handicap = parseFloat(player.handicap) || 0;
                                     
                                     return (
@@ -2066,7 +2066,7 @@
                                                 style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '2px solid #ddd' }}
                                             >
                                                 <option value="">Selecciona un jugador</option>
-                                                {round.players.map(player => (
+                                                {round.players.sort((a, b) => a.name.localeCompare(b.name)).map(player => (
                                                     <option key={player.id} value={player.id}>
                                                         {player.name}
                                                     </option>
