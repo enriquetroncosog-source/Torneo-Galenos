@@ -2664,9 +2664,9 @@
                     });
                 });
 
-                // Marcar como descalificados a quienes tienen 4 o más faltas
+                // Marcar como descalificados a quienes tienen 5 o más faltas
                 Object.values(playerStats).forEach(player => {
-                    if (player.faltas >= 4) {
+                    if (player.faltas >= 5) {
                         player.descalificado = true;
                     }
                 });
@@ -2849,8 +2849,8 @@
                                                            player.faltas === 3 ? '#e74c3c' : '#c0392b'
                                                 }}>
                                                     {player.faltas}
-                                                    {player.faltas === 3 && ' ⚠️'}
-                                                    {player.faltas >= 4 && ' 🚫'}
+                                                    {player.faltas === 4 && ' ⚠️'}
+                                                    {player.faltas >= 5 && ' 🚫'}
                                                 </td>
                                                 <td>{player.scorePoints}</td>
                                                 <td>{player.puttPoints}</td>
