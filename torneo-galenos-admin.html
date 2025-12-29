@@ -1696,26 +1696,27 @@
 
                 const galenosTotal = numGalenos * 20;
                 const invitadosTotal = numInvitados * 20;
+                const total = galenosTotal + invitadosTotal;
 
-                const top3Pool = galenosTotal * 0.5;
-                const ctpFromGalenos = galenosTotal * 0.25;
-                const bolsaFromGalenos = galenosTotal * 0.25;
-                const ctpFromInvitados = invitadosTotal * 0.65;
-                const bolsaFromInvitados = invitadosTotal * 0.35;
-
-                const totalCTP = ctpFromGalenos + ctpFromInvitados;
-                const totalBolsa = bolsaFromGalenos + bolsaFromInvitados;
-
-                const first = top3Pool * 0.5;
-                const second = top3Pool * 0.3;
-                const third = top3Pool * 0.2;
+                // Nueva distribución
+                const totalCTP = 60; // $60 fijo para 2 CTPs de $30 c/u
+                const resto = total - totalCTP;
+                
+                const top3Pool = resto * 0.70; // 70% del resto para Top 3
+                const first = top3Pool * 0.50;   // 50% del Top 3
+                const second = top3Pool * 0.30;  // 30% del Top 3
+                const third = top3Pool * 0.20;   // 20% del Top 3
+                
+                const totalBolsa = resto * 0.30; // 30% del resto para bolsa
 
                 return {
                     galenosTotal,
                     invitadosTotal,
-                    total: galenosTotal + invitadosTotal,
+                    total,
+                    resto,
                     top3Pool,
                     totalCTP,
+                    ctpIndividual: totalCTP / 2, // $30 cada CTP
                     totalBolsa,
                     first,
                     second,
@@ -1868,24 +1869,41 @@
                         border: '2px solid #1e5550'
                     }}>
                         <h3 style={{ color: '#1e5550', marginBottom: '15px' }}>💰 Distribución de Premios</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
                             <div>
                                 <strong>Galenos:</strong> {prizes.numGalenos} × $20 = ${prizes.galenosTotal.toFixed(2)}
                             </div>
                             <div>
                                 <strong>Invitados:</strong> {prizes.numInvitados} × $20 = ${prizes.invitadosTotal.toFixed(2)}
                             </div>
-                            <div>
+                            <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #1e5550', paddingTop: '10px', marginTop: '5px' }}>
                                 <strong>Total:</strong> ${prizes.total.toFixed(2)}
                             </div>
                             <div>
-                                <strong>Top 3:</strong> ${prizes.top3Pool.toFixed(2)}
+                                <strong>CTP:</strong> ${prizes.totalCTP.toFixed(2)} (2 × $30)
+                            </div>
+                            <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '5px' }}>
+                                <strong>Resto:</strong> ${prizes.resto.toFixed(2)}
                             </div>
                             <div>
-                                <strong>CTP:</strong> ${prizes.totalCTP.toFixed(2)}
+                                <strong>Top 3:</strong> ${prizes.top3Pool.toFixed(2)} (70%)
                             </div>
                             <div>
-                                <strong>Bolsa:</strong> ${prizes.totalBolsa.toFixed(2)}
+                                <strong>Bolsa:</strong> ${prizes.totalBolsa.toFixed(2)} (30%)
+                            </div>
+                        </div>
+                        
+                        <div style={{ 
+                            background: '#f0f8f7', 
+                            padding: '15px', 
+                            borderRadius: '8px',
+                            border: '1px solid #1e5550'
+                        }}>
+                            <strong style={{ color: '#1e5550', display: 'block', marginBottom: '10px' }}>🏆 Desglose Top 3:</strong>
+                            <div style={{ display: 'grid', gap: '8px' }}>
+                                <div>1er Lugar (50%): <strong>${prizes.first.toFixed(2)}</strong></div>
+                                <div>2do Lugar (30%): <strong>${prizes.second.toFixed(2)}</strong></div>
+                                <div>3er Lugar (20%): <strong>${prizes.third.toFixed(2)}</strong></div>
                             </div>
                         </div>
                     </div>
